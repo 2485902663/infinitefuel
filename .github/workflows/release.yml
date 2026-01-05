@@ -1,5 +1,4 @@
 name: Build and Release Mod
-
 on:
   push:
     branches: [ "main" ]
@@ -11,37 +10,39 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download Gradle Wrapper from NeoForge MDK
+      - name: 下载Gradle Wrapper（修复脚本）
         run: |
           mkdir -p gradle/wrapper
-          curl -L https://github.com/neoforged/MDK/raw/1.21.1/gradlew -o gradlew
-          curl -L https://github.com/neoforged/MDK/raw/1.21.1/gradlew.bat -o gradlew.bat
-          curl -L https://github.com/neoforged/MDK/raw/1.21.1/gradle/wrapper/gradle-wrapper.jar -o gradle/wrapper/gradle-wrapper.jar
-          curl -L https://github.com/neoforged/MDK/raw/1.21.1/gradle/wrapper/gradle-wrapper.properties -o gradle/wrapper/gradle-wrapper.properties
+          curl -L https://raw.githubusercontent.com/neoforged/MDK/1.21.1-47.0.1/gradlew -o gradlew
+          curl -L https://raw.githubusercontent.com/neoforged/MDK/1.21.1-47.0.1/gradlew.bat -o gradlew.bat
+          curl -L https://raw.githubusercontent.com/neoforged/MDK/1.21.1-47.0.1/gradle/wrapper/gradle-wrapper.jar -o gradle/wrapper/gradle-wrapper.jar
+          curl -L https://raw.githubusercontent.com/neoforged/MDK/1.21.1-47.0.1/gradle/wrapper/gradle-wrapper.properties -o gradle/wrapper/gradle-wrapper.properties
           chmod +x gradlew
 
-      - name: Set up JDK 21
+      - name: 配置JDK21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Build with Gradle
+      - name: Gradle构建（生成jar）
         run: ./gradlew build
 
-      - name: Upload to Release
+      - name: 列出文件（排查路径，关键！）
+        run: ls -l build/libs/  # 打印目录下所有jar，避免路径错
+
+      - name: 上传到Release（通配符适配所有jar，解决404）
         uses: softprops/action-gh-release@v1
         with:
-          files: build/libs/infinitefuel-1.0.0.jar
+          files: build/libs/*.jar  # 改通配符，不管文件名都能传
           tag_name: v1.0.0
           name: Infinite Fuel Mod 1.0.0
           body: |
-            让煤炭和木炭在熔炉中无限燃烧的 **NeoForge 1.21.1 Mod**。
-
+            适配Minecraft1.21.1+NeoForge，煤炭/木炭熔炉无限燃烧
             ## 使用方法
-            1. 安装 [NeoForge 1.21.1](https://neoforged.net/)
-            2. 将下载的 `.jar` 文件放入 `.minecraft/mods` 文件夹
-            3. 启动游戏
+            1. 装NeoForge1.21.1（官网：https://neoforged.net/）
+            2. jar放进.minecraft/mods文件夹
+            3. 启动游戏即可用
           draft: false
           prerelease: false
         env:
